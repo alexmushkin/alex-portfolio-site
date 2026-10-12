@@ -1,0 +1,642 @@
+/* ==========================================================
+   Alex Mushkin's Portfolio
+   Look: flat Guy Billout color fields + Harvey-comics ink.
+   Cream paper, heavy black outlines, hard offset shadows.
+   ========================================================== */
+
+:root {
+  --paper: #f5eedc;
+  --paper-deep: #ebe1c8;
+  --ink: #1d1a17;
+  --ink-soft: #5a524a;
+  --sky: #a9cbd9;
+  --mustard: #e8b43a;
+  --tomato: #d9543c;
+  --grass: #7fa56b;
+
+  --line: 2.5px solid var(--ink);
+  --shadow: 5px 5px 0 var(--ink);
+  --shadow-sm: 3px 3px 0 var(--ink);
+  --radius: 14px;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Newsreader", Georgia, serif;
+  --font-type: "Courier Prime", "Courier New", monospace;
+
+  --measure: 64ch;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main { flex: 1; }
+
+a { color: inherit; }
+
+img, svg { max-width: 100%; display: block; }
+
+.wrap {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ---------- Header / nav ---------- */
+
+.site-header {
+  border-bottom: var(--line);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  transition: transform 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* quirk: it's a basketball, and it spins when you hover the name */
+.logo:hover .logo-mark { transform: rotate(200deg); }
+
+/* Title is set in the typewriter's font, stacked on two lines */
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-type);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+}
+
+.logo-line { display: block; line-height: 1.3; }
+.logo-line.accent { color: var(--tomato); }
+
+/* Home page: menu buttons start as empty outlines until their typed strips land */
+.nav-link.is-waiting,
+.nav-toggle.is-waiting { color: transparent; }
+.nav-toggle.is-waiting .caret { border-top-color: transparent; }
+.nav-toggle .caret { transition: border-top-color 0.25s ease; }
+.nav-link.is-landed,
+.nav-toggle.is-landed { animation: land 0.4s cubic-bezier(0.3, 1.6, 0.5, 1); }
+
+@keyframes land {
+  0% { transform: scale(1.15); }
+  100% { transform: none; }
+}
+
+/* a cut strip of paper on its way up to become a menu button */
+.paper-strip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+}
+
+.paper-strip span {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  line-height: 1;
+  font-family: var(--font-type);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+
+.nav { display: flex; gap: 10px; align-items: center; }
+
+.nav-link,
+.nav-toggle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 999px;
+  padding: 8px 18px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link:hover,
+.nav-toggle:hover,
+.nav-link[aria-current="page"],
+.nav-link.is-current,
+.dropdown.is-current .nav-toggle {
+  background: var(--mustard);
+}
+
+.nav-link:active,
+.nav-toggle:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.nav-toggle .caret {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--ink);
+  transition: transform 0.15s ease;
+}
+
+.dropdown { position: relative; }
+
+.dropdown.is-open .nav-toggle .caret { transform: rotate(180deg); }
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 280px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  background: var(--paper);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: none;
+}
+
+.dropdown.is-open .dropdown-menu { display: block; }
+
+.dropdown-menu a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu a[aria-current="page"] { background: var(--sky); }
+
+/* a project with entries: link + its own little dropdown toggle */
+.menu-row { display: flex; align-items: center; gap: 2px; }
+.menu-row > a { flex: 1; }
+
+.sub-toggle {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.sub-toggle:hover,
+.has-sub.is-open .sub-toggle { background: var(--mustard); }
+
+.sub-toggle .caret {
+  width: 0;
+  height: 0;
+  margin-top: 2px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid var(--ink);
+  transition: transform 0.15s ease;
+}
+
+.has-sub.is-open .sub-toggle .caret { transform: rotate(180deg); margin-top: -2px; }
+
+.submenu {
+  display: none;
+  list-style: none;
+  margin: 0 0 6px 14px;
+  padding: 0 0 0 8px;
+  border-left: 2px dashed var(--ink-soft);
+}
+
+.has-sub.is-open > .submenu { display: block; }
+
+.dropdown-menu .submenu a { font-weight: 500; font-size: 0.95rem; padding: 8px 10px; }
+
+.submenu-empty {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.dropdown-menu .menu-all {
+  border-top: 2px dashed var(--ink-soft);
+  margin-top: 6px;
+  padding-top: 12px;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* ---------- Home hero ---------- */
+
+.hero { padding: 24px 0 48px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Hero animation stage ---------- */
+
+/* the scene and the bio share one spot; the bio fades in when the scene leaves */
+.stage-area { position: relative; display: grid; }
+.stage-area > .stage,
+.stage-area > .after-shot { grid-area: 1 / 1; }
+
+.stage {
+  display: block;
+  width: 100%;
+  height: auto; /* set by hero-animation.js to keep the drawing's scale */
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.6s ease;
+}
+
+.stage.is-done { display: none; }
+
+/* bio that replaces the scene once the animation ends */
+.after-shot {
+  display: flex;
+  align-items: center;
+  padding: 24px 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.8s ease 0.3s, visibility 0s linear 0.3s;
+}
+
+.after-shot.is-shown { opacity: 1; visibility: visible; }
+
+.bio {
+  max-width: 30ch;
+  margin: 0 auto;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 3.2vw, 2.2rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+.stage:focus { outline: none; }
+.stage:focus-visible { outline: 2.5px dashed var(--ink); outline-offset: 6px; border-radius: var(--radius); }
+
+.stage .ink {
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.stage .paper { fill: #fffaf0; }
+.stage .roller { fill: var(--ink); }
+.stage .knob { fill: var(--mustard); }
+.stage .key { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+.stage .key.is-down { fill: var(--mustard); }
+.stage .shadow { fill: var(--ink); opacity: 0.15; }
+.stage .ball-fill { fill: #e8772e; }
+.stage .seam { stroke: var(--ink); stroke-width: 2.5; fill: none; }
+
+.stage .typed {
+  font-family: var(--font-type);
+  font-size: 20px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.stage .cut { stroke: var(--ink); stroke-width: 1.5; }
+.stage .scissors .blade { fill: #e4ddcd; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.stage .scissors .shank { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.stage .scissors .handle { fill: var(--tomato); stroke: var(--ink); stroke-width: 2.5; }
+.stage .scissors .pivot { fill: var(--ink); }
+
+.stage .tick { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; opacity: 0.45; }
+
+.stage .figure * {
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.stage .figure circle { fill: var(--paper); }
+.stage .figure .eye { fill: var(--ink); stroke: none; }
+.stage .figure .shoe-upper { fill: #fff; stroke-width: 2.5; }
+.stage .figure .shoe-stripe { stroke: var(--tomato); stroke-width: 2.5; }
+.stage .figure .shoe-sole { fill: var(--tomato); stroke-width: 2.5; }
+
+/* after the typewriter becomes the ball he hops down into the footer's
+   bottom-left and keeps dribbling (size is set by hero-animation.js) */
+.stage.is-mini {
+  position: absolute;
+  left: 16px;
+  bottom: 4px;
+  z-index: 1;
+  transform-origin: 0 0;
+}
+
+.stage.is-mini #ground,
+.stage.is-mini #ground-ticks { display: none; }
+
+/* the ground he leaves behind, fading out */
+.stage.ground-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+/* ---------- Section cards ---------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  padding: 24px 0 72px;
+}
+
+.card {
+  display: block;
+  text-decoration: none;
+  background: var(--paper);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.card .swatch {
+  width: 56px;
+  height: 56px;
+  border: var(--line);
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.card h2,
+.card h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  margin: 0 0 8px;
+}
+
+.card p { margin: 0; color: var(--ink-soft); }
+
+.swatch-tomato { background: var(--tomato); }
+.swatch-sky { background: var(--sky); }
+.swatch-mustard { background: var(--mustard); }
+.swatch-grass { background: var(--grass); }
+
+/* ---------- Interior pages ---------- */
+
+.page-head {
+  padding: 56px 0 28px;
+  border-bottom: var(--line);
+  background: var(--paper-deep);
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tomato);
+  margin: 0 0 10px;
+}
+
+.eyebrow a { text-decoration: none; }
+.eyebrow a:hover { text-decoration: underline; }
+
+.page-head h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.2rem, 5.5vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+  max-width: 18ch;
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--ink-soft);
+  max-width: 50ch;
+}
+
+.page-head .dateline {
+  margin-top: -4px;
+  font-family: var(--font-type);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.card .card-date {
+  margin-top: 6px;
+  font-family: var(--font-type);
+  font-size: 0.85rem;
+}
+
+/* ---------- Back button: a cartoon glove pointing the way ---------- */
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 6px 18px 6px 10px;
+  background: var(--tomato);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  transform: rotate(-3deg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.back-button .glove { width: 40px; height: 28px; overflow: visible; }
+
+.back-button .glove rect,
+.back-button .glove path {
+  fill: #fff;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.back-button:hover,
+.back-button:focus-visible {
+  transform: rotate(0deg) translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.back-button:hover .glove,
+.back-button:focus-visible .glove { animation: poke 0.45s ease-in-out infinite alternate; }
+
+.back-button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+@keyframes poke {
+  from { transform: translateX(0); }
+  to { transform: translateX(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-button:hover .glove,
+  .back-button:focus-visible .glove { animation: none; }
+}
+
+.page-body { padding: 48px 0 80px; }
+
+.empty {
+  border: 2.5px dashed var(--ink-soft);
+  border-radius: var(--radius);
+  padding: 40px 28px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* ---------- Reading layout ---------- */
+
+.prose {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.prose h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  margin: 2.2em 0 0.5em;
+}
+
+.prose h2:first-child { margin-top: 0; }
+
+.prose p { margin: 0 0 1.2em; }
+
+.prose .placeholder { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  position: relative;
+  text-align: right; /* bottom left is where the little dribbler lands on the home page */
+  border-top: var(--line);
+  padding: 24px 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Quirks ---------- */
+
+.quirk-ball {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 760px) {
+  body { font-size: 1.1rem; }
+
+  .site-header .wrap { padding-top: 12px; padding-bottom: 12px; }
+
+  .dropdown-menu { min-width: 240px; }
+}
+
+@media (max-width: 420px) {
+  .nav-link, .nav-toggle { padding: 7px 14px; font-size: 0.95rem; }
+  .logo-text { font-size: 0.95rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

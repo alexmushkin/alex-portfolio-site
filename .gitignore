@@ -1,0 +1,5 @@
+# Mac clutter
+.DS_Store
+
+# local preview server settings (not part of the site)
+.claude/
