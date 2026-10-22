@@ -30,6 +30,7 @@ const SPORTS = [
       { title: "Messi", href: "messi.html", date: "2026-10-07" },
     ],
   },
+  { title: "Watch My Team (app)", href: "watch-my-team.html" },
 ];
 
 // Little basketball, used by the logo and by quirks.js.

@@ -598,6 +598,113 @@ img, svg { max-width: 100%; display: block; }
 
 .prose .placeholder { color: var(--ink-soft); font-style: italic; }
 
+/* ---------- Embedded app (Watch My Team) ---------- */
+
+.page-head .app-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 10px 22px;
+  background: var(--mustard);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  text-decoration: none;
+  border: var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.page-head .app-button:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow); }
+.page-head .app-button:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+
+/* the app plays on a cartoon TV */
+.tv {
+  position: relative;
+  margin-top: 44px;
+  padding: 18px;
+  background: var(--tomato);
+  border: var(--line);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+}
+
+.tv-antenna {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 0;
+  height: 46px;
+  transform-origin: 50% 100%;
+}
+
+.tv-antenna span {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: 52px;
+  background: var(--ink);
+  border-radius: 2px;
+  transform-origin: 50% 100%;
+}
+
+.tv-antenna span::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--mustard);
+  border: 2px solid var(--ink);
+  box-sizing: border-box;
+}
+
+.tv-antenna span:first-child { transform: rotate(-32deg); }
+.tv-antenna span:last-child { transform: rotate(32deg); }
+
+.tv:hover .tv-antenna { animation: wiggle 0.5s ease-in-out 2; }
+
+@keyframes wiggle {
+  25% { transform: rotate(-7deg); }
+  75% { transform: rotate(7deg); }
+}
+
+.tv-screen {
+  overflow: hidden;
+  background: #fff;
+  border: var(--line);
+  border-radius: 12px;
+}
+
+.tv-screen iframe {
+  display: block;
+  width: 100%;
+  height: min(80vh, 900px);
+  min-height: 520px;
+  border: 0;
+}
+
+.tv-note {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 760px) {
+  .tv { padding: 10px; border-radius: 18px; }
+  .tv-screen iframe { height: 75vh; min-height: 440px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tv:hover .tv-antenna { animation: none; }
+}
+
 /* ---------- Footer ---------- */
 
 .site-footer {
