@@ -144,7 +144,7 @@ img, svg { max-width: 100%; display: block; }
 }
 
 
-.nav { display: flex; gap: 10px; align-items: center; }
+.nav { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 
 .nav-link,
 .nav-toggle {
@@ -736,7 +736,10 @@ img, svg { max-width: 100%; display: block; }
 
   .site-header .wrap { padding-top: 12px; padding-bottom: 12px; }
 
-  .dropdown-menu { min-width: 240px; }
+  /* menus open full width under the header, so a wrapped button's menu stays on screen */
+  .site-header .wrap { position: relative; }
+  .dropdown { position: static; }
+  .dropdown-menu { left: 20px; right: 20px; top: calc(100% - 4px); min-width: 0; }
 }
 
 @media (max-width: 420px) {

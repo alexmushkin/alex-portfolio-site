@@ -1,7 +1,8 @@
 /*
   Home page animation:
-  a typewriter types the site's sections ("Creative Writing", "Sports") and a
-  pair of scissors snips the sheet into two strips. Each strip floats up and
+  a typewriter types the site's sections ("Creative Writing", "Sports",
+  "Projects") and a pair of scissors snips the sheet into strips, zigzagging
+  down one cut at a time. Each strip floats up and
   reshapes into its (empty) button in the header menu. A stick figure runs in
   and starts dribbling the typewriter, which shrinks and rounds off with each
   bounce until it's a basketball. Then he hops down into the bottom-left of
@@ -64,11 +65,13 @@
   const BALL_R = 25;
   const BALL_REST = GROUND - BALL_R;
   // typed lines, and the header menu button each one floats up to
-  const LINES = ["Creative Writing", "Sports"];
-  const NAV_TARGETS = ['[data-section="writing"] .nav-toggle', '[data-section="sports"] .nav-toggle'];
+  const LINES = ["Creative Writing", "Sports", "Projects"];
+  const NAV_TARGETS = ["writing", "sports", "projects"].map((s) => `[data-section="${s}"] .nav-toggle`);
   // paper coordinates: sheet spans x 390..610; the scissors cut at these heights
-  const PAPER = { left: 390, right: 610, bottom: 208 };
-  const CUTS = [152, 178];      // strip 1 = 152..178, strip 2 = 178..bottom
+  const PAPER = { left: 390, right: 610, bottom: 230 };
+  const CUTS = [152, 178, 204]; // strip 1 = 152..178, strip 2 = 178..204, strip 3 = 204..bottom
+  const CUT_S = 0.4;            // scissors' time along one cut
+  const DROP_S = 0.1;           // and down to the next one
   const CHAR_W = 12;           // Courier Prime at 20px
   const CARRIAGE_HOME = 100;   // carriage offset before each line starts
   const LINE_FEED = 26;
@@ -102,12 +105,23 @@
   const T = {};
   T.typeStart = 0.3;
   T.perChar = 0.08;
-  T.returnStart = T.typeStart + LINES[0].length * T.perChar + 0.1; // carriage return
-  T.returnEnd = T.returnStart + 0.4;
-  T.line2Start = T.returnEnd + 0.08;
-  T.typeEnd = T.line2Start + LINES[1].length * T.perChar;
+  // each line, then a carriage return before the next
+  T.lineStart = [];
+  T.returnStart = [];
+  T.returnEnd = [];
+  LINES.reduce((start, line, i) => {
+    T.lineStart.push(start);
+    const end = start + line.length * T.perChar;
+    if (i === LINES.length - 1) { T.typeEnd = end; return end; }
+    T.returnStart.push(end + 0.1);
+    T.returnEnd.push(end + 0.5);
+    return end + 0.58;
+  }, T.typeStart);
   T.cutStart = T.typeEnd + 0.15;      // scissors reach the paper
-  T.handoff = T.cutStart + 0.95;      // strips leave for the menu
+  // the last cut runs on off the sheet (90 units past its usual end)
+  T.lastCut = CUT_S * (1 + 90 / (PAPER.right - PAPER.left + 100));
+  T.cutEnd = T.cutStart + (CUTS.length - 1) * (CUT_S + DROP_S) + T.lastCut;
+  T.handoff = T.cutEnd - 0.1;         // strips leave for the menu
   T.walkStart = T.handoff;            // he runs in
   T.walkEnd = T.walkStart + 1.1;
   T.reachEnd = T.walkEnd + 0.15;      // hand on top of the typewriter
@@ -171,7 +185,7 @@
 
   const el = {
     roller: $("tw-roller"),
-    lines: [$("tw-line1"), $("tw-line2")],
+    lines: LINES.map((_, i) => $(`tw-line${i + 1}`)),
     body: $("tw-body"),
     figure: figureG,
     head: $("head"),
@@ -201,32 +215,52 @@
   }
 
   function typewriterState(t) {
-    const a = lineState(t, T.typeStart, LINES[0]);
-    const b = lineState(t, T.line2Start, LINES[1]);
-    const r = easeInOut(prog(t, T.returnStart, T.returnEnd));
-    let shift = t < T.returnStart ? a.shift : t < T.returnEnd ? lerp(a.shift, CARRIAGE_HOME, r) : b.shift;
+    const lines = LINES.map((text, i) => lineState(t, T.lineStart[i], text));
+    // the line being typed (or just finished)
+    const line = Math.max(0, T.lineStart.filter((s) => t >= s).length - 1);
+    const returning = line < LINES.length - 1 && t >= T.returnStart[line];
+    const r = returning ? easeInOut(prog(t, T.returnStart[line], T.returnEnd[line])) : 0;
+    let shift = lerp(lines[line].shift, CARRIAGE_HOME, r);
     // once the paper is gone, the carriage slides back home (out of his way)
     shift = lerp(shift, CARRIAGE_HOME, easeInOut(prog(t, T.handoff + 0.3, T.handoff + 0.8)));
-    const keyIndex = t < T.returnStart ? a.key : t >= T.line2Start ? b.key : null;
-    return { counts: [a.count, b.count], shift, feed: LINE_FEED * r, keyIndex, line: t < T.line2Start ? 0 : 1 };
+    const keyIndex = returning ? null : lines[line].key;
+    return { counts: lines.map((l) => l.count), shift, feed: LINE_FEED * (line + r), keyIndex, line };
   }
 
-  // Scissors: slide in from the right along the top cut, drop down, snip back
-  // along the middle cut, and leave. Returns position, facing and cut progress.
+  // Scissors: slide in from the right along the top cut, then zigzag: across
+  // a cut, drop to the next, back across it, and off the sheet after the last
+  // one. Even cuts run right→left (face 1), odd ones left→right (face -1).
+  // Returns position, facing and how far along each cut is.
   function scissorsState(t) {
     const c = T.cutStart;
     const far = PAPER.right + 80, near = PAPER.left - 20;
-    let x, y = CUTS[0], face = 1;
-    if (t < c) x = lerp(far + 90, far, prog(t, c - 0.2, c));
-    else if (t < c + 0.4) x = lerp(far, near, prog(t, c, c + 0.4));
-    else if (t < c + 0.5) { x = near; y = lerp(CUTS[0], CUTS[1], easeInOut(prog(t, c + 0.4, c + 0.5))); face = -1; }
-    else { x = lerp(near, far + 90, prog(t, c + 0.5, c + 1.05)); y = CUTS[1]; face = -1; }
-    const visible = t > c - 0.2 && t < c + 1.05;
+    const faceOf = (i) => (i % 2 ? -1 : 1);
+    const ends = (i) => (i % 2 ? [near, far] : [far, near]);
+    const visible = t > c - 0.2 && t < T.cutEnd;
     const snip = 16 * Math.abs(Math.sin((t - c) * 26));
+    const cuts = CUTS.map(() => 0);
+    if (t < c) {
+      return { x: lerp(far + 90, far, prog(t, c - 0.2, c)), y: CUTS[0], face: 1, visible, snip, cuts };
+    }
+    const i = Math.min(CUTS.length - 1, Math.floor((t - c) / (CUT_S + DROP_S)));
+    const u = t - c - i * (CUT_S + DROP_S);
+    let [from, to] = ends(i);
+    let face = faceOf(i), y = CUTS[i], x;
+    if (i === CUTS.length - 1) {
+      to -= 90 * face; // runs on off the sheet
+      x = lerp(from, to, clamp01(u / T.lastCut));
+    } else if (u < CUT_S) {
+      x = lerp(from, to, u / CUT_S);
+    } else {
+      x = to;
+      y = lerp(CUTS[i], CUTS[i + 1], easeInOut((u - CUT_S) / DROP_S));
+      face = faceOf(i + 1);
+    }
     // the cut runs behind the blades (they meet ~20 units ahead of the pivot)
-    const cut1 = clamp01((PAPER.right - (x - 20 * face)) / (PAPER.right - PAPER.left));
-    const cut2 = t < c + 0.5 ? 0 : clamp01((x + 20 - PAPER.left) / (PAPER.right - PAPER.left));
-    return { x, y, face, visible, snip, cuts: [t < c ? 0 : t < c + 0.4 ? cut1 : 1, cut2] };
+    const W = PAPER.right - PAPER.left;
+    const along = faceOf(i) === 1 ? (PAPER.right - (x - 20)) / W : (x + 20 - PAPER.left) / W;
+    CUTS.forEach((_, k) => (cuts[k] = k < i ? 1 : k > i ? 0 : clamp01(along)));
+    return { x, y, face, visible, snip, cuts };
   }
 
   // ---------- figure ----------
@@ -319,7 +353,7 @@
               left: `${src.left}px`, top: `${src.top}px`, width: `${src.width}px`, height: `${src.height}px`,
               borderRadius: "2px", borderWidth: "2px", boxShadow: `${ink} 0px 0px 0px`, transform: "rotate(0deg)",
             },
-            { transform: `rotate(${i ? 4 : -4}deg)`, offset: 0.45 },
+            { transform: `rotate(${i % 2 ? 4 : -4}deg)`, offset: 0.45 },
             {
               left: `${dst.left}px`, top: `${dst.top}px`, width: `${dst.width}px`, height: `${dst.height}px`,
               borderRadius: `${dst.height / 2}px`, borderWidth: `${border}px`, boxShadow: cs.boxShadow, transform: "rotate(0deg)",
@@ -430,10 +464,11 @@
     scissors.setAttribute("transform", `translate(${sc.x} ${sc.y}) scale(${1.5 * sc.face} 1.5)`);
     bladeTop.setAttribute("transform", `rotate(${-sc.snip / 2})`);
     bladeBot.setAttribute("transform", `rotate(${sc.snip / 2})`);
-    cutLines[0].setAttribute("x1", PAPER.right);
-    cutLines[0].setAttribute("x2", lerp(PAPER.right, PAPER.left, sc.cuts[0]));
-    cutLines[1].setAttribute("x1", PAPER.left);
-    cutLines[1].setAttribute("x2", lerp(PAPER.left, PAPER.right, sc.cuts[1]));
+    cutLines.forEach((line, i) => {
+      const [from, to] = i % 2 ? [PAPER.left, PAPER.right] : [PAPER.right, PAPER.left];
+      line.setAttribute("x1", from);
+      line.setAttribute("x2", lerp(from, to, sc.cuts[i]));
+    });
 
     // after the handoff the strips are page elements; the leftover top of the
     // sheet drifts up and fades

@@ -2,6 +2,7 @@
   Shared header + footer.
   To add a Creative Writing project, add it to CREATIVE_WRITING below.
   To add a Sports article or series, add it to SPORTS.
+  To add an app or other project, add it to PROJECTS.
   Anything with an `entries` list (a project or series) gets its own little
   dropdown under it in the menu.
   Each piece's `date` (YYYY-MM-DD) shows under its title and on its card.
@@ -30,7 +31,17 @@ const SPORTS = [
       { title: "Messi", href: "messi.html", date: "2026-10-07" },
     ],
   },
-  { title: "Watch My Team (app)", href: "watch-my-team.html" },
+];
+
+const PROJECTS = [
+  { title: "Watch My Team", href: "watch-my-team.html" },
+];
+
+// the menu's sections, in order (the home page animation types these labels)
+const SECTIONS = [
+  { key: "writing", label: "Creative Writing", page: "creative-writing.html", all: "All creative writing →", list: CREATIVE_WRITING },
+  { key: "sports", label: "Sports", page: "sports.html", all: "All sports →", list: SPORTS },
+  { key: "projects", label: "Projects", page: "projects.html", all: "All projects →", list: PROJECTS },
 ];
 
 // Little basketball, used by the logo and by quirks.js.
@@ -78,10 +89,19 @@ const inSection = (list, here) =>
 function renderHeader() {
   const here = currentPage();
   const current = (href) => (href === here ? ' aria-current="page"' : "");
-  const inWriting = here === "creative-writing.html" || inSection(CREATIVE_WRITING, here);
-  const inSports = here === "sports.html" || inSection(SPORTS, here);
-  const projects = menuItems(CREATIVE_WRITING, "writing", here);
-  const articles = menuItems(SPORTS, "sports", here);
+  const dropdowns = SECTIONS.map((sec) => {
+    const isCurrent = here === sec.page || inSection(sec.list, here);
+    return `
+          <div class="dropdown${isCurrent ? " is-current" : ""}" data-section="${sec.key}">
+            <button class="nav-toggle" aria-expanded="false" aria-controls="menu-${sec.key}">
+              ${sec.label} <span class="caret" aria-hidden="true"></span>
+            </button>
+            <ul class="dropdown-menu" id="menu-${sec.key}">
+              ${menuItems(sec.list, sec.key, here)}
+              <li><a class="menu-all" href="${sec.page}"${current(sec.page)}>${sec.all}</a></li>
+            </ul>
+          </div>`;
+  }).join("");
 
   document.getElementById("site-header").outerHTML = `
     <header class="site-header">
@@ -90,32 +110,14 @@ function renderHeader() {
           <span class="logo-mark">${BALL_SVG}</span>
           <span class="logo-text"><span class="logo-line">Alex Mushkin's</span> <span class="logo-line accent">Portfolio</span></span>
         </a>
-        <nav class="nav" aria-label="Main">
-          <div class="dropdown${inWriting ? " is-current" : ""}" data-section="writing">
-            <button class="nav-toggle" aria-expanded="false" aria-controls="menu-writing">
-              Creative Writing <span class="caret" aria-hidden="true"></span>
-            </button>
-            <ul class="dropdown-menu" id="menu-writing">
-              ${projects}
-              <li><a class="menu-all" href="creative-writing.html"${current("creative-writing.html")}>All creative writing →</a></li>
-            </ul>
-          </div>
-          <div class="dropdown${inSports ? " is-current" : ""}" data-section="sports">
-            <button class="nav-toggle" aria-expanded="false" aria-controls="menu-sports">
-              Sports <span class="caret" aria-hidden="true"></span>
-            </button>
-            <ul class="dropdown-menu" id="menu-sports">
-              ${articles}
-              <li><a class="menu-all" href="sports.html"${current("sports.html")}>All sports →</a></li>
-            </ul>
-          </div>
+        <nav class="nav" aria-label="Main">${dropdowns}
         </nav>
       </div>
     </header>`;
 }
 
 // every dated piece, by page
-const PIECES = [...CREATIVE_WRITING, ...SPORTS].flatMap((p) => [p, ...(p.entries || [])]);
+const PIECES = SECTIONS.flatMap((sec) => sec.list).flatMap((p) => [p, ...(p.entries || [])]);
 
 // "2026-09-24" → "September 24, 2026" (parsed by hand so time zones can't shift the day)
 function formatDate(iso) {
